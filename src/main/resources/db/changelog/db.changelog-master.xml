@@ -1,0 +1,36 @@
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+    <changeSet id="1" author="paulomoreira">
+        <createTable tableName="processo_judicial">
+            <column name="numero" type="varchar(255)">
+                <constraints primaryKey="true" nullable="false" unique="true"/>
+            </column>
+            <column name="descricao" type="varchar(255)"/>
+            <column name="status" type="varchar(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet id="2" author="paulomoreira">
+        <createTable tableName="reu">
+            <column name="cpf" type="varchar(255)">
+                <constraints primaryKey="true" nullable="false" unique="true"/>
+            </column>
+            <column name="nome" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="processo_numero" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet id="3" author="paulomoreira">
+        <addForeignKeyConstraint
+            baseTableName="reu"
+            baseColumnNames="processo_numero"
+            constraintName="fk_reu_processo"
+            referencedTableName="processo_judicial"
+            referencedColumnNames="numero"
+            onDelete="SET NULL"/>
+    </changeSet>
+</databaseChangeLog>
