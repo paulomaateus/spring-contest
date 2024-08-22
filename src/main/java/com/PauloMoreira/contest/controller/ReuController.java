@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.PauloMoreira.contest.dto.ReuDTO;
-import com.PauloMoreira.contest.model.Reu;
 import com.PauloMoreira.contest.service.ReuService;
 
 @RestController
@@ -20,8 +19,8 @@ public class ReuController {
     private ReuService reuService;
 
     @PostMapping
-    public ResponseEntity<Reu> createReu(@RequestBody ReuDTO reu) {
-        Reu saved = reuService.insertReu(reu);
+    public ResponseEntity<ReuDTO> createReu(@RequestBody ReuDTO reu) {
+        ReuDTO saved = reuService.createReu(reu);
         return new ResponseEntity<>(saved, HttpStatus.CREATED);
     }
 }

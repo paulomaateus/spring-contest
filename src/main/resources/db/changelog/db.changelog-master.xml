@@ -33,4 +33,19 @@
             referencedColumnNames="numero"
             onDelete="SET NULL"/>
     </changeSet>
+    <changeSet id="4" author="paulomoreira">
+        <addColumn tableName="processo_judicial">
+            <column name="cpf_reu" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+        <addForeignKeyConstraint
+            baseTableName="processo_judicial"
+            baseColumnNames="cpf_reu"
+            constraintName="fk_processo_reu"
+            referencedTableName="reu"
+            referencedColumnNames="cpf"
+            onDelete="SET NULL"/>
+
+    </changeSet>
 </databaseChangeLog>

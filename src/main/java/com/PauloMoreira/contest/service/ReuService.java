@@ -20,12 +20,20 @@ public class ReuService {
     @Autowired
     private ProcessoJudicialRepository processoJudicialRepository;
 
-    public Reu insertReu(ReuDTO reu) {
+    public ReuDTO createReu(ReuDTO reu) {
         Optional<ProcessoJudicial> result = processoJudicialRepository.findById(reu.getNumeroProcesso());
         if (result.isEmpty()) {
             throw new ProcessoNotFoundException("Processo inexistente. O processo do réu não está cadastrado no sistema.");
         }
-        return reuRepository.save(new Reu(reu, result.get()));
-    }
 
+        ProcessoJudicial processo = result.get();
+        Reu reuSave = new Reu(reu, processo);
+
+        processo.setReu(reuSave);
+
+        reuRepository.save(reuSave);
+        processoJudicialRepository.save(processo);
+
+        return reu;
+    }
 }
