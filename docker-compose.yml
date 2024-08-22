@@ -1,0 +1,38 @@
+services:
+  postgres:
+    image: postgres:14
+    environment:
+      POSTGRES_DB: contest_db
+      POSTGRES_USER: paulomoreira
+      POSTGRES_PASSWORD: 123qwe
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: mvn spring-boot:run
+    volumes:
+      - .:/app
+    ports:  
+      - "8080:8080"
+    depends_on:
+      - postgres
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/contest_db
+      SPRING_DATASOURCE_USERNAME: paulomoreira
+      SPRING_DATASOURCE_PASSWORD: 123qwe
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
