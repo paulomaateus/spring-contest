@@ -12,10 +12,13 @@ import jakarta.persistence.OneToOne;
 public class Reu {
 
     public Reu(ReuDTO reuDTO, ProcessoJudicial processoJudicial) {
-        this.processo = processoJudicial;
         this.cpf = reuDTO.getCpf();
         this.nome = reuDTO.getName();
         this.processo = processoJudicial;
+    }
+
+    public Reu() {
+
     }
 
     @Id
