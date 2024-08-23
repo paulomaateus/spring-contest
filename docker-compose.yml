@@ -16,9 +16,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    command: mvn spring-boot:run
-    volumes:
-      - .:/app
     ports:  
       - "${APP_PORT}:8080"
     depends_on:
