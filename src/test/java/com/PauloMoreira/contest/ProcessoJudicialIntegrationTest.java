@@ -9,10 +9,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.PauloMoreira.contest.model.ProcessoJudicial;
@@ -22,6 +19,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @SpringBootTest
 @AutoConfigureMockMvc
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
+@Transactional
+@Rollback
 public class ProcessoJudicialIntegrationTest {
 
     @Autowired
@@ -34,8 +33,6 @@ public class ProcessoJudicialIntegrationTest {
     private ProcessoJudicialRepository processoJudicialRepository;
 
     @Test
-    @Transactional
-    @Rollback
     public void testCreateProcessoJudicial() throws Exception {
         ProcessoJudicial processo = new ProcessoJudicial();
         processo.setNumero("12345");
@@ -44,38 +41,34 @@ public class ProcessoJudicialIntegrationTest {
 
         String jsonContent = objectMapper.writeValueAsString(processo);
 
-        mockMvc.perform(post("/processos")
+        mockMvc.perform(MockMvcRequestBuilders.post("/processos")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonContent))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.numero").value("12345"))
-                .andExpect(jsonPath("$.descricao").value("Descrição do Processo"));
+                .andExpect(MockMvcResultMatchers.status().isCreated())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.numero").value("12345"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.descricao").value("Descrição do Processo"));
     }
 
     @Test
-    @Transactional
-    @Rollback
     public void testCreateProcessoJudicialDuplicate() throws Exception {
         ProcessoJudicial processo = new ProcessoJudicial();
         processo.setNumero("123456");
         processo.setDescricao("Descrição do Processo");
         processo.setStatus("Ativo");
 
-        mockMvc.perform(post("/processos")
+        mockMvc.perform(MockMvcRequestBuilders.post("/processos")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(processo)))
-                .andExpect(status().isCreated());
+                .andExpect(MockMvcResultMatchers.status().isCreated());
 
-        mockMvc.perform(post("/processos")
+        mockMvc.perform(MockMvcRequestBuilders.post("/processos")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(processo)))
-                .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.message").value("Duplicidade de processos. Já existe um processo salvo com esse número"));
+                .andExpect(MockMvcResultMatchers.status().isConflict())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.message").value("Duplicidade de processos. Já existe um processo salvo com esse número"));
     }
 
     @Test
-    @Transactional
-    @Rollback
     public void testListProcessosVazios() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.get("/processos"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -87,9 +80,7 @@ public class ProcessoJudicialIntegrationTest {
     }
 
     @Test
-    @Transactional
-    @Rollback
-    void testListProcessosComItens() throws Exception {
+    public void testListProcessosComItens() throws Exception {
         ProcessoJudicial processo1 = new ProcessoJudicial();
         processo1.setNumero("123456");
         processo1.setDescricao("Descrição 1");
@@ -118,4 +109,36 @@ public class ProcessoJudicialIntegrationTest {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.page.totalPages").value(1));
     }
 
+    @Test
+    public void testDeleteProcesso() throws Exception {
+        ProcessoJudicial processo1 = new ProcessoJudicial();
+        processo1.setNumero("123456");
+        processo1.setDescricao("Descrição 1");
+        processo1.setStatus("Ativo");
+
+        ProcessoJudicial processo2 = new ProcessoJudicial();
+        processo2.setNumero("010123");
+        processo2.setDescricao("Descrição 2");
+        processo2.setStatus("Ativo");
+
+        ProcessoJudicial processo3 = new ProcessoJudicial();
+        processo3.setNumero("00000");
+        processo3.setDescricao("Deletar Processo");
+        processo3.setStatus("Ativo");
+
+        processoJudicialRepository.save(processo1);
+        processoJudicialRepository.save(processo2);
+        processoJudicialRepository.save(processo3);
+
+        mockMvc.perform(MockMvcRequestBuilders.delete("/processos/{numero}", "00000"))
+                .andExpect(MockMvcResultMatchers.status().isNoContent());
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/processos"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.content.length()").value(2))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.page.size").value(10))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.page.number").value(0))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.page.totalElements").value(2))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.page.totalPages").value(1));
+    }
 }
