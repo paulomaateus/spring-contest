@@ -3,7 +3,7 @@ package com.PauloMoreira.contest.dto;
 public class ReuDTO {
 
     private String cpf;
-    private String name;
+    private String nome;
     private String numeroProcesso;
 
     public String getCpf() {
@@ -14,12 +14,12 @@ public class ReuDTO {
         this.cpf = cpf;
     }
 
-    public String getName() {
-        return this.name;
+    public String getNome() {
+        return this.nome;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setNome(String name) {
+        this.nome = name;
     }
 
     public String getNumeroProcesso() {
