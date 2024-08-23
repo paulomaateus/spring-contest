@@ -18,7 +18,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.PauloMoreira.contest.dto.ReuDTO;
 import com.PauloMoreira.contest.model.ProcessoJudicial;
 import com.PauloMoreira.contest.repository.ProcessoJudicialRepository;
-import com.PauloMoreira.contest.repository.ReuRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @SpringBootTest
@@ -33,9 +32,6 @@ public class ReuIntegrationTest {
 
     @Autowired
     private ObjectMapper objectMapper;
-
-    @Autowired
-    private ReuRepository reuRepository;
 
     @Autowired
     private ProcessoJudicialRepository processoJudicialRepository;
@@ -86,6 +82,34 @@ public class ReuIntegrationTest {
                 .content(jsonContent))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message").value("Processo inexistente. O processo do réu não está cadastrado no sistema."));
+    }
+
+    @Test
+    public void testCreateReuInvalidCpf() throws Exception {
+
+        ReuDTO reuDTO = new ReuDTO();
+        reuDTO.setCpf("1234567890");
+        reuDTO.setNome("Reu teste");
+        reuDTO.setNumeroProcesso("00000");
+
+        ReuDTO reuDTONoneCpf = new ReuDTO();
+        reuDTONoneCpf.setNome("Reu teste");
+        reuDTONoneCpf.setNumeroProcesso("00000");
+
+        String jsonContent1 = objectMapper.writeValueAsString(reuDTO);
+        String jsonContent2 = objectMapper.writeValueAsString(reuDTONoneCpf);
+
+        mockMvc.perform(post("/reu")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonContent1))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Numero de CPF inválido."));
+
+        mockMvc.perform(post("/reu")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonContent2))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Numero de CPF inválido."));
     }
 
     @Test

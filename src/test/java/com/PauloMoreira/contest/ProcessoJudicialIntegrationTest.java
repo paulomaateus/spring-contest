@@ -50,6 +50,33 @@ public class ProcessoJudicialIntegrationTest {
     }
 
     @Test
+    public void testCreateProcessoJudicialException() throws Exception {
+        ProcessoJudicial processo1 = new ProcessoJudicial();
+        processo1.setDescricao("Descrição 1");
+        processo1.setStatus("Ativo");
+
+        ProcessoJudicial processo2 = new ProcessoJudicial();
+        processo2.setNumero("");
+        processo2.setDescricao("Descrição 1");
+        processo2.setStatus("Ativo");
+
+        String jsonContent1 = objectMapper.writeValueAsString(processo1);
+        String jsonContent2 = objectMapper.writeValueAsString(processo1);
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/processos")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonContent1))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.message").value("O numerro do processo não pode ser nulo nem vazio."));
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/processos")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonContent2))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.message").value("O numerro do processo não pode ser nulo nem vazio."));
+    }
+
+    @Test
     public void testCreateProcessoJudicialDuplicate() throws Exception {
         ProcessoJudicial processo = new ProcessoJudicial();
         processo.setNumero("123456");
@@ -141,4 +168,19 @@ public class ProcessoJudicialIntegrationTest {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.page.totalElements").value(2))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.page.totalPages").value(1));
     }
+
+    @Test
+    public void testDeleteNotFoundProcesso() throws Exception {
+        ProcessoJudicial processo1 = new ProcessoJudicial();
+        processo1.setNumero("123456");
+        processo1.setDescricao("Descrição 1");
+        processo1.setStatus("Ativo");
+
+        processoJudicialRepository.save(processo1);
+
+        mockMvc.perform(MockMvcRequestBuilders.delete("/processos/{numero}", "00000"))
+                .andExpect(MockMvcResultMatchers.status().isNotFound())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.message").value("Processo inexistente. O número do processo ao qual se quer deletar não existe no sistema."));
+    }
+
 }

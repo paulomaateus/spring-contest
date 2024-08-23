@@ -8,9 +8,11 @@ import org.springframework.stereotype.Service;
 
 import com.PauloMoreira.contest.dto.ProcessoJudicialDTO;
 import com.PauloMoreira.contest.exception.DuplicateNumeroProcessoException;
+import com.PauloMoreira.contest.exception.InvalidInputException;
 import com.PauloMoreira.contest.exception.ProcessoNotFoundException;
 import com.PauloMoreira.contest.model.ProcessoJudicial;
 import com.PauloMoreira.contest.repository.ProcessoJudicialRepository;
+import com.PauloMoreira.contest.util.ValidationUtils;
 
 @Service
 public class ProcessoJudicialService {
@@ -19,6 +21,9 @@ public class ProcessoJudicialService {
     private ProcessoJudicialRepository processoJudicialRepository;
 
     public ProcessoJudicial createProcessoJudicial(ProcessoJudicial processoJudicial) {
+        if (!ValidationUtils.isValidNumeroProcesso(processoJudicial.getNumero())) {
+            throw new InvalidInputException("O numerro do processo não pode ser nulo nem vazio.");
+        }
         if (processoJudicialRepository.existsById(processoJudicial.getNumero())) {
             throw new DuplicateNumeroProcessoException("Duplicidade de processos. Já existe um processo salvo com esse número");
 
@@ -34,6 +39,9 @@ public class ProcessoJudicialService {
     }
 
     public void deleteProcessoJudicial(String numero) {
+        if (!ValidationUtils.isValidNumeroProcesso(numero)) {
+            throw new InvalidInputException("O numerro do processo não pode ser nulo nem vazio.");
+        }
         if (!processoJudicialRepository.existsById(numero)) {
             throw new ProcessoNotFoundException("Processo inexistente. O número do processo ao qual se quer deletar não existe no sistema.");
         } else {
