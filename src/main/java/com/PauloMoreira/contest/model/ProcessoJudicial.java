@@ -1,9 +1,9 @@
 package com.PauloMoreira.contest.model;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 
 @Entity
@@ -17,8 +17,7 @@ public class ProcessoJudicial {
 
     private String status;
 
-    @OneToOne
-    @JoinColumn(name = "cpf_reu", referencedColumnName = "cpf", insertable = false, updatable = true)
+    @OneToOne(mappedBy = "processo", cascade = CascadeType.ALL, optional = true, orphanRemoval = true)
     private Reu reu;
 
     public Reu getReu() {

@@ -13,7 +13,7 @@ public class Reu {
 
     public Reu(ReuDTO reuDTO, ProcessoJudicial processoJudicial) {
         this.cpf = reuDTO.getCpf();
-        this.nome = reuDTO.getName();
+        this.nome = reuDTO.getNome();
         this.processo = processoJudicial;
     }
 
@@ -29,7 +29,7 @@ public class Reu {
     private String nome;
 
     @OneToOne
-    @JoinColumn(name = "processo_numero", referencedColumnName = "numero")
+    @JoinColumn(name = "processo_numero", referencedColumnName = "numero", nullable = false)
     private ProcessoJudicial processo;
 
     public String getCpf() {
