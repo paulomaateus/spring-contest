@@ -20,6 +20,14 @@ import com.PauloMoreira.contest.model.ProcessoJudicial;
 import com.PauloMoreira.contest.repository.ProcessoJudicialRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+/**
+ * Testes de integração para a entidade Reu no contexto da API de processos
+ * judiciais.
+ *
+ * Configura um ambiente de teste com um banco de dados em memória e executa
+ * testes para validar a criação de réus, a validação de dados e a listagem de
+ * processos com réus associados.
+ */
 @SpringBootTest
 @AutoConfigureMockMvc
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
@@ -36,6 +44,16 @@ public class ReuIntegrationTest {
     @Autowired
     private ProcessoJudicialRepository processoJudicialRepository;
 
+    /**
+     * Testa a criação de um réu com dados válidos.
+     *
+     * Cria um processo judicial, salva no banco de dados e então envia uma
+     * requisição POST para o endpoint "/reu" com dados válidos do réu. Verifica
+     * se a resposta tem o status HTTP 201 Created e se os dados do réu são
+     * retornados corretamente.
+     *
+     * @throws Exception se ocorrer um erro durante o teste
+     */
     @Test
     public void testCreateReu() throws Exception {
         ProcessoJudicial processo = new ProcessoJudicial();
@@ -61,6 +79,16 @@ public class ReuIntegrationTest {
                 .andExpect(jsonPath("$.numeroProcesso").value("12345"));
     }
 
+    /**
+     * Testa a criação de um réu com um número de processo que não existe.
+     *
+     * Cria um processo judicial, salva no banco de dados e então tenta criar um
+     * réu com um número de processo que não está cadastrado. Verifica se a
+     * resposta tem o status HTTP 404 Not Found e contém a mensagem de erro
+     * apropriada.
+     *
+     * @throws Exception se ocorrer um erro durante o teste
+     */
     @Test
     public void testCreateReuProcessoNotFound() throws Exception {
         ProcessoJudicial processo = new ProcessoJudicial();
@@ -84,6 +112,16 @@ public class ReuIntegrationTest {
                 .andExpect(jsonPath("$.message").value("Processo inexistente. O processo do réu não está cadastrado no sistema."));
     }
 
+    /**
+     * Testa a criação de um réu com CPF inválido.
+     *
+     * Tenta criar um réu com um CPF inválido (com menos de 11 dígitos) e também
+     * tenta criar um réu sem fornecer o CPF. Verifica se a resposta tem o
+     * status HTTP 400 Bad Request e contém a mensagem de erro apropriada para o
+     * CPF inválido.
+     *
+     * @throws Exception se ocorrer um erro durante o teste
+     */
     @Test
     public void testCreateReuInvalidCpf() throws Exception {
 
@@ -103,15 +141,26 @@ public class ReuIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonContent1))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Numero de CPF inválido."));
+                .andExpect(jsonPath("$.message").value("Número de CPF inválido."));
 
         mockMvc.perform(post("/reu")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonContent2))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Numero de CPF inválido."));
+                .andExpect(jsonPath("$.message").value("Número de CPF inválido."));
     }
 
+    /**
+     * Testa a listagem de processos com réus associados.
+     *
+     * Cria dois processos judiciais e salva no banco de dados. Em seguida, cria
+     * um réu associado a um dos processos e verifica se a listagem de processos
+     * retorna os dados corretos, incluindo o CPF do réu no processo associado.
+     * Verifica se a resposta tem o status HTTP 200 OK e se os dados dos
+     * processos e do réu são retornados corretamente.
+     *
+     * @throws Exception se ocorrer um erro durante o teste
+     */
     @Test
     public void testListProcessosWithReu() throws Exception {
         ProcessoJudicial processo1 = new ProcessoJudicial();

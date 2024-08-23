@@ -16,6 +16,22 @@ import com.PauloMoreira.contest.model.ProcessoJudicial;
 import com.PauloMoreira.contest.repository.ProcessoJudicialRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+/**
+ * Testes de integração para a entidade {@link ProcessoJudicial}.
+ *
+ * Esta classe contém testes para verificar as operações CRUD e a manipulação de
+ * exceções relacionadas ao {@link ProcessoJudicial}. Utiliza o {@link MockMvc}
+ * para simular requisições HTTP e verificar as respostas da API.
+ *
+ * As anotações utilizadas são: - {@link SpringBootTest}: Carrega o contexto
+ * completo da aplicação para testes de integração. -
+ * {@link AutoConfigureMockMvc}: Configura o {@link MockMvc} para testes de
+ * controladores REST. - {@link AutoConfigureTestDatabase}: Configura o banco de
+ * dados de teste. Utiliza um banco de dados em memória para os testes. -
+ * {@link Transactional}: Garante que cada teste é executado em uma transação
+ * que é revertida após o término do teste. - {@link Rollback}: Garante que as
+ * transações são revertidas após a execução do teste.
+ */
 @SpringBootTest
 @AutoConfigureMockMvc
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
@@ -32,6 +48,15 @@ public class ProcessoJudicialIntegrationTest {
     @Autowired
     private ProcessoJudicialRepository processoJudicialRepository;
 
+    /**
+     * Testa a criação de um novo processo judicial.
+     *
+     * Envia uma requisição POST para o endpoint "/processos" com um objeto
+     * {@link ProcessoJudicial} válido e verifica se a resposta tem o status
+     * HTTP 201 Created e contém os dados esperados.
+     *
+     * @throws Exception se ocorrer um erro durante o teste
+     */
     @Test
     public void testCreateProcessoJudicial() throws Exception {
         ProcessoJudicial processo = new ProcessoJudicial();
@@ -49,6 +74,16 @@ public class ProcessoJudicialIntegrationTest {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.descricao").value("Descrição do Processo"));
     }
 
+    /**
+     * Testa a criação de um processo judicial com dados inválidos.
+     *
+     * Envia uma requisição POST para o endpoint "/processos" com dados
+     * inválidos (como número do processo nulo ou vazio) e verifica se a
+     * resposta tem o status HTTP 400 Bad Request e contém a mensagem de erro
+     * apropriada.
+     *
+     * @throws Exception se ocorrer um erro durante o teste
+     */
     @Test
     public void testCreateProcessoJudicialException() throws Exception {
         ProcessoJudicial processo1 = new ProcessoJudicial();
@@ -61,21 +96,31 @@ public class ProcessoJudicialIntegrationTest {
         processo2.setStatus("Ativo");
 
         String jsonContent1 = objectMapper.writeValueAsString(processo1);
-        String jsonContent2 = objectMapper.writeValueAsString(processo1);
+        String jsonContent2 = objectMapper.writeValueAsString(processo2);
 
         mockMvc.perform(MockMvcRequestBuilders.post("/processos")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonContent1))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.message").value("O numerro do processo não pode ser nulo nem vazio."));
+                .andExpect(MockMvcResultMatchers.jsonPath("$.message").value("O número do processo não pode ser nulo nem vazio."));
 
         mockMvc.perform(MockMvcRequestBuilders.post("/processos")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonContent2))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.message").value("O numerro do processo não pode ser nulo nem vazio."));
+                .andExpect(MockMvcResultMatchers.jsonPath("$.message").value("O número do processo não pode ser nulo nem vazio."));
     }
 
+    /**
+     * Testa a criação de um processo judicial com número duplicado.
+     *
+     * Envia duas requisições POST para o endpoint "/processos" com o mesmo
+     * número de processo e verifica se a primeira requisição cria o processo
+     * com sucesso e a segunda gera um status HTTP 409 Conflict com a mensagem
+     * de erro de duplicidade.
+     *
+     * @throws Exception se ocorrer um erro durante o teste
+     */
     @Test
     public void testCreateProcessoJudicialDuplicate() throws Exception {
         ProcessoJudicial processo = new ProcessoJudicial();
@@ -92,9 +137,18 @@ public class ProcessoJudicialIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(processo)))
                 .andExpect(MockMvcResultMatchers.status().isConflict())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.message").value("Duplicidade de processos. Já existe um processo salvo com esse número"));
+                .andExpect(MockMvcResultMatchers.jsonPath("$.message").value("Duplicidade de processos. Já existe um processo salvo com esse número."));
     }
 
+    /**
+     * Testa a listagem de processos quando não há nenhum no banco de dados.
+     *
+     * Envia uma requisição GET para o endpoint "/processos" e verifica se a
+     * resposta tem o status HTTP 200 OK e se a resposta contém uma lista vazia
+     * de processos.
+     *
+     * @throws Exception se ocorrer um erro durante o teste
+     */
     @Test
     public void testListProcessosVazios() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.get("/processos"))
@@ -106,6 +160,15 @@ public class ProcessoJudicialIntegrationTest {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.page.totalPages").value(0));
     }
 
+    /**
+     * Testa a listagem de processos quando há itens no banco de dados.
+     *
+     * Adiciona dois processos no banco de dados e envia uma requisição GET para
+     * o endpoint "/processos". Verifica se a resposta tem o status HTTP 200 OK
+     * e se a resposta contém os dados dos processos adicionados.
+     *
+     * @throws Exception se ocorrer um erro durante o teste
+     */
     @Test
     public void testListProcessosComItens() throws Exception {
         ProcessoJudicial processo1 = new ProcessoJudicial();
@@ -136,6 +199,16 @@ public class ProcessoJudicialIntegrationTest {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.page.totalPages").value(1));
     }
 
+    /**
+     * Testa a exclusão de um processo judicial.
+     *
+     * Adiciona três processos no banco de dados e envia uma requisição DELETE
+     * para o endpoint "/processos/{numero}" para excluir um processo
+     * específico. Verifica se a exclusão é bem-sucedida com o status HTTP 204
+     * No Content e se o processo foi removido da lista.
+     *
+     * @throws Exception se ocorrer um erro durante o teste
+     */
     @Test
     public void testDeleteProcesso() throws Exception {
         ProcessoJudicial processo1 = new ProcessoJudicial();
@@ -169,6 +242,16 @@ public class ProcessoJudicialIntegrationTest {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.page.totalPages").value(1));
     }
 
+    /**
+     * Testa a tentativa de exclusão de um processo que não existe.
+     *
+     * Adiciona um processo no banco de dados e envia uma requisição DELETE para
+     * o endpoint "/processos/{numero}" tentando excluir um processo que não
+     * existe. Verifica se a resposta tem o status HTTP 404 Not Found e contém a
+     * mensagem de erro apropriada.
+     *
+     * @throws Exception se ocorrer um erro durante o teste
+     */
     @Test
     public void testDeleteNotFoundProcesso() throws Exception {
         ProcessoJudicial processo1 = new ProcessoJudicial();
